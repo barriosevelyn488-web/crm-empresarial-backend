@@ -1,0 +1,45 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: crm_empresarial_pg
+    restart: unless-stopped
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-crm_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-crm_local_pass_2026}
+      POSTGRES_DB: ${POSTGRES_DB:-crm_empresarial_gt}
+      TZ: America/Guatemala
+      PGTZ: America/Guatemala
+    volumes:
+      - crm_empresarial_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-crm_user} -d $${POSTGRES_DB:-crm_empresarial_gt}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  redis:
+    image: redis:7-alpine
+    container_name: crm_empresarial_redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    environment:
+      TZ: America/Guatemala
+    volumes:
+      - crm_empresarial_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 3s
+
+volumes:
+  crm_empresarial_pg_data:
+    name: crm_empresarial_pg_data
+  crm_empresarial_redis_data:
+    name: crm_empresarial_redis_data
